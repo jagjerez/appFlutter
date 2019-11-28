@@ -1,5 +1,5 @@
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:parte_smmsl/pages/FormHoras.dart';
@@ -7,7 +7,7 @@ import 'package:parte_smmsl/pages/FormHoras.dart';
 import '../Mediasquery.dart';
 
 class JGItemDaysWork extends StatelessWidget{
-  DocumentReference ref;
+  String ref;
   String userId;
   String day;
   DateTime fecha_ini;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:parte_smmsl/pages/listenterprise.dart';
 
 import '../Mediasquery.dart';
 
@@ -34,6 +35,7 @@ class AppBarUser extends StatelessWidget implements PreferredSizeWidget{
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Text('MasterTools-Day'),
                   ],
@@ -77,10 +79,56 @@ class AppBarUser extends StatelessWidget implements PreferredSizeWidget{
         },
       ),
       actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.account_circle),
-          onPressed: (){
-            Navigator.of(context).push(MaterialPageRoute(builder: (context)=> UserAdmin()));
+        PopupMenuButton(
+          icon: Icon(
+            Icons.more_vert,
+            color: Colors.white,
+          ),
+          onSelected: (String newValue) async{
+            switch(newValue){
+              case "One":
+                Navigator.of(context).push(MaterialPageRoute(builder: (context)=> UserAdmin()));
+                break;
+              case "Two":
+                FirebaseUser hola = await FirebaseAuth.instance.currentUser();
+                Navigator.of(context).push(MaterialPageRoute(builder: (context)=> listenterprise(user: hola,)));
+                break;
+            }
+          },
+          itemBuilder:  (BuildContext context){
+            return <String>['One', 'Two']
+                .map((String value) {
+              switch(value){
+                case "One":
+                  return PopupMenuItem<String>(
+                    value: value,
+                    child:Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        Text("User Data"),
+                        Icon(Icons.account_circle)
+                      ],
+                    ),
+                  );
+                case "Two":
+                  return PopupMenuItem<String>(
+                    value: value,
+                    child:Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        Text("Enterprises"),
+                        Icon(Icons.business)
+                      ],
+                    ),
+                  );
+                default:
+                  return PopupMenuItem<String>(
+                    value: value,
+                    child: Icon(Icons.account_circle),
+                  );
+              }
+
+            }).toList();
           },
         )
       ],
@@ -90,3 +138,10 @@ class AppBarUser extends StatelessWidget implements PreferredSizeWidget{
   @override
   Size get preferredSize => Size.fromHeight(height);
 }
+
+/*IconButton(
+icon: Icon(Icons.account_circle),
+onPressed: (){
+Navigator.of(context).push(MaterialPageRoute(builder: (context)=> UserAdmin()));
+},
+)*/

@@ -1,18 +1,27 @@
+
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:parte_smmsl/Control/AppBarUser2.dart';
 
+import '../Mediasquery.dart';
+
 class EditHour extends StatefulWidget {
+  EditHour({Key key, @required this.user_id}) : super(key: key);
+  String user_id;
   @override
-  _EditHourState createState() => _EditHourState();
+  _EditHourState createState() => _EditHourState(this.user_id);
 }
 
 class _EditHourState extends State<EditHour> {
+  String _user_id;
+  _EditHourState(this._user_id);
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
   String _enterprise;
   String _description;
+  String _enterprise_id;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +34,7 @@ class _EditHourState extends State<EditHour> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
-                margin: EdgeInsets.fromLTRB(45, 0, 45, 0),
+                margin: EdgeInsets.fromLTRB(Mediasquery.marginEditEnterprise(context), 0, Mediasquery.marginEditEnterprise(context), 0),
                 child: Row(
                   children: <Widget>[
                     Text(
@@ -46,17 +55,75 @@ class _EditHourState extends State<EditHour> {
                 )
               ),
               Container(
-                margin: EdgeInsets.fromLTRB(45, 0, 45, 0),
-                child: TextFormField(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.fromLTRB(Mediasquery.marginEditEnterprise(context), 0, Mediasquery.marginEditEnterprise(context), 0),
+                  child:StreamBuilder<QuerySnapshot>(
+                    stream: Firestore.instance.collection('enterprises').snapshots(),
+                    builder: (BuildContext context,AsyncSnapshot<QuerySnapshot> snapshot){
+                      if(snapshot.hasError){
+                        return Text('Error ${snapshot.error}');
+                      }
+
+                      switch(snapshot.connectionState){
+                        case ConnectionState.waiting: return Text('Loading...');
+                        default:
+                          return  DropdownButton(
+                            value: _enterprise,
+                            hint: Container(
+                              width: MediaQuery.of(context).size.width - (Mediasquery.marginEditEnterprise(context) * 2) - Mediasquery.widthIconEditEnterprise(context),
+                              child:  Text("Seleccione..."),
+                            ),
+                            icon: Container(
+                              //width: Mediasquery.widthIconEditEnterprise(context),
+                              child: Icon(
+                                Icons.keyboard_arrow_down,
+                                color: Colors.black87,
+                                size: Mediasquery.widthIconEditEnterprise(context),
+                              ),
+                            ),
+                            iconDisabledColor: Colors.grey,
+                            iconEnabledColor: Colors.white,
+                            underline: Container(
+                              height: 1,
+                              color: Colors.black45,
+                            ),
+                            elevation: 16,
+                            onChanged: (String newValue)  async{
+                              _enterprise_id = newValue;
+                              //DocumentSnapshot s = await Firestore.instance.collection('enterprises').document(_enterprise_id).snapshots().first;
+                              setState(() {
+                                _enterprise = _enterprise_id;
+                              });
+                            },
+                            items: snapshot.data.documents.where((e)=>e["user_id"] == this._user_id).map((DocumentSnapshot document){
+
+                              return DropdownMenuItem(
+                                value: document.documentID,
+                                child:Container(
+                                  width: MediaQuery.of(context).size.width - (Mediasquery.marginEditEnterprise(context) * 2) - Mediasquery.widthIconEditEnterprise(context),
+                                  child: Text(document["name"]),
+                                ),
+                              );
+                            }).toList(),
+                          ); /*<String>['One', 'Two']
+                        .map<DropdownMenuItem<String>>((String value) {
+
+
+                    }).toList()*/
+                      }
+                    },
+                  )
+                /*TextFormField(
+                  initialValue: _enterprise,
                   validator: validationText,
                   onChanged: (input)=> _enterprise = input,
                   decoration: InputDecoration(
-                    labelText: 'Enterprise',
+                    labelText: 'Enterprise Name',
                   ),
-                ),
+                ),*/
               ),
               Container(
-                margin: EdgeInsets.fromLTRB(45, 0, 45, 0),
+                margin: EdgeInsets.fromLTRB(Mediasquery.marginEditEnterprise(context), 0, Mediasquery.marginEditEnterprise(context), 0),
                 child: TextFormField(
                   validator: validationText,
                   onChanged: (input) => _description = input,
@@ -103,7 +170,7 @@ class _EditHourState extends State<EditHour> {
       // you'd often call a server or save the information in a database.
       _formKey.currentState.save();
       final snack = new SnackBar(
-          content: Text('Creating User')
+          content: Text('Creating Data')
       );
       try
       {
@@ -112,12 +179,15 @@ class _EditHourState extends State<EditHour> {
             .showSnackBar(
             snack
         );
+        DocumentSnapshot s = await Firestore.instance.collection('enterprises').document(_enterprise_id).snapshots().first;
+
         FirebaseUser result = await FirebaseAuth.instance.currentUser();
         String day = '${new DateFormat("E").format(DateTime.now())}day';
         Firestore.instance.collection("days").add({
           'day':day,
           'description':_description,
-          'enterprise':_enterprise,
+          'enterprise':s['name'],
+          'enterprise_id':_enterprise_id,
           'start':DateTime.now(),
           'state':'active',
           'user_id':result.uid,
