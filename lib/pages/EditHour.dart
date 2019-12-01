@@ -189,6 +189,7 @@ class _EditHourState extends State<EditHour> {
           'enterprise':s['name'],
           'enterprise_id':_enterprise_id,
           'start':DateTime.now(),
+          'init':DateTime.now(),
           'state':'active',
           'user_id':result.uid,
           'accumulate':0
