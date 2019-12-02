@@ -344,7 +344,20 @@ class FormHorasState extends State<FormHoras> {
                                 padding: EdgeInsets.all(8.0),
                                 splashColor: Colors.blueAccent,
                                 onPressed: doc['state']=='active'?((){
-                                  Firestore.instance.collection("days").document(user_id).updateData({'state':'end'});
+                                  _displaySnackBar(context,'Fishing');
+                                  Firestore.instance.collection("days").document(user_id).get().then((s){
+                                    Firestore.instance.collection('days').document(user_id).updateData({'accumulate':s.data['accumulate'] + diff,'state':'end'}).whenComplete((){
+                                      //Scaffold.of(context).hideCurrentSnackBar(reason: SnackBarClosedReason.hide);
+                                      _hideSnackBar();
+                                      _displaySnackBarColor(context,'Fished',Colors.green);
+                                    }).catchError((e){
+                                      _hideSnackBar();
+                                      _displaySnackBarColor(context,'Error',Colors.red);
+                                    });
+                                  }).catchError((e){
+                                    _hideSnackBar();
+                                    _displaySnackBarColor(context,'Error',Colors.red);
+                                  });
                                 }):null,
                                 child: Text(
                                     "Finalizar"
