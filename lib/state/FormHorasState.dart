@@ -12,7 +12,12 @@ import '../pages/FormHoras.dart';
 class FormHorasState extends State<FormHoras> {
   String user_id;
   FormHorasState(this.user_id);
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+
   int diff;
+  String stateBtn = "Stop";
+  String _razon = "";
   @override
   Widget build(BuildContext context) {
 
@@ -23,9 +28,10 @@ class FormHorasState extends State<FormHoras> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBarUser2(height: 50,),
       body:StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('days').snapshots(),
+        stream: Firestore.instance.collection('days').snapshots(),
         builder: (context,t){
           if(t.hasError){
             return Text('Error ${t.error}');
@@ -35,9 +41,7 @@ class FormHorasState extends State<FormHoras> {
               return Text('Espere...');
             default:
               return ListView(
-                children: t.data.docs.where((e)=> e.id == user_id).map((QueryDocumentSnapshot document){
-                  final Map<String,dynamic> doc = document.data();
-                  final DocumentReference ref = doc['enterprise_id'];
+                children: t.data.documents.where((e)=> e.documentID == user_id).map((DocumentSnapshot doc){
                   return Column(
                     children: <Widget>[
                       Container(
@@ -58,25 +62,12 @@ class FormHorasState extends State<FormHoras> {
                             ),
                             Container(
                                 width:Mediasquery.widthTextHour(context),
-                                child:StreamBuilder<DocumentSnapshot>(
-                                  stream: ref.get().asStream(),
-                                  builder: (BuildContext context,AsyncSnapshot<DocumentSnapshot> snapshot){
-
-                                    if(snapshot.hasError){
-                                      return Text('Error ${snapshot.error}');
-                                    }
-                                    if(snapshot.data != null){
-                                      final Map<String,dynamic> document = snapshot.data.data();
-                                      return Text(
-                                        document['name'],
-                                        style: TextStyle(
-                                          fontSize: Mediasquery.fontSizeComplementListDaysWork(context),
-                                        ),
-                                        textAlign: TextAlign.left,
-                                      );
-                                    }
-                                    return Text('Espere...');
-                                  },
+                                child:Text(
+                                  doc['enterprise'],
+                                  style: TextStyle(
+                                    fontSize: Mediasquery.fontSizeComplementListDaysWork(context),
+                                  ),
+                                  textAlign: TextAlign.left,
                                 )
                             )
                           ],
@@ -200,7 +191,7 @@ class FormHorasState extends State<FormHoras> {
                       Container(
                           child:StreamBuilder<DateTime>(
                             stream: ClockStream().time(doc['state']=="active"?false:true).stream,
-                            builder: (context,value){
+                            builder: (context,value) {
                               if(value.hasError){
                                 return Text('Error ${value.error}');
                               }
@@ -208,10 +199,16 @@ class FormHorasState extends State<FormHoras> {
                               switch(value.connectionState)
                                   {
                                 case ConnectionState.waiting:
+                                  /*var algo = 0;
+                                  Firestore.instance.collection('times').where((DocumentSnapshot e)=> e.data['day_id'] == user_id)..then((v){
+
+                                  }).whenComplete((){
+                                    return JGTextNumberFormat(new DateFormat('HH:mm:ss').format(new DateTime.fromMillisecondsSinceEpoch(doc['accumulate'],isUtc: true)),65.0);
+                                  });*/
                                   return JGTextNumberFormat(new DateFormat('HH:mm:ss').format(new DateTime.fromMillisecondsSinceEpoch(doc['accumulate'],isUtc: true)),65.0);
                                 default:
                                   //this.diff = value.data.millisecondsSinceEpoch;
-                                  diff = (value.data.millisecondsSinceEpoch - doc['start'].toDate().millisecondsSinceEpoch);
+                                  diff = (value.data.millisecondsSinceEpoch - doc['init'].toDate().millisecondsSinceEpoch);
                                   return  JGTextNumberFormat(new DateFormat('HH:mm:ss').format(new DateTime.fromMillisecondsSinceEpoch(diff,isUtc: true)),65.0);
                               }
                             },
@@ -233,6 +230,109 @@ class FormHorasState extends State<FormHoras> {
                           children: <Widget>[
                             Container(
                               //width:Mediasquery.widthTextHour(context),
+                                margin: EdgeInsets.all(Mediasquery.k(context)),
+                                child:
+                                FlatButton(
+
+                                  color: Color.fromARGB(255, 20, 79, 203),
+                                  textColor: Colors.white,
+                                  disabledColor: Colors.blueGrey,
+                                  disabledTextColor: Colors.white70,
+                                  padding: EdgeInsets.all(8.0),
+                                  splashColor: Colors.blueAccent,
+                                  onPressed: doc['state']=='active' || doc['state']=='stop' ?(){
+                                    if(doc['state'] == 'stop'){
+                                      _displaySnackBar(context,'Creaing Data');
+                                      Firestore.instance.collection("days").document(user_id).updateData({'state':'active','init':DateTime.now()}).then((value){
+                                        _hideSnackBar();
+                                        _displaySnackBarColor(context,'ok',Colors.green);
+                                        //Navigator.of(context).pop();
+                                      }).catchError((e){
+                                        _displaySnackBarColor(context,'Error',Colors.red);
+                                      });
+                                    }
+
+                                    if(doc['state'] == 'active')
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context){
+                                          return Form(
+                                            key: _formKey,
+                                            child: AlertDialog(
+                                              title: Text("Write a reason of close."),
+                                              content: Container(
+                                                height: 75,
+                                                child: Column(
+                                                  children: <Widget>[
+                                                    Container(
+                                                      child: TextFormField(
+                                                        onChanged: (input)=> _razon = input,
+                                                        decoration: InputDecoration(
+                                                          labelText: 'Reason',
+                                                        ),
+                                                        validator: validationText,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              actions: <Widget>[
+                                                FlatButton(
+                                                  onPressed: (){
+                                                  if (_formKey.currentState.validate()) {
+                                                    _formKey.currentState.save();
+                                                    _displaySnackBar(context,'Creaing Data');
+                                                    Firestore.instance.collection("times").add({
+                                                      'day_id': user_id,
+                                                      'acumulate':diff,
+                                                      'razon':_razon
+                                                    }).then((value){
+
+                                                      Firestore.instance.collection("days").document(user_id).get().then((s){
+                                                        Firestore.instance.collection('days').document(user_id).updateData({'accumulate':s.data['accumulate'] + diff,'state':'stop'}).whenComplete((){
+                                                          //Scaffold.of(context).hideCurrentSnackBar(reason: SnackBarClosedReason.hide);
+                                                          _hideSnackBar();
+                                                          Navigator.of(context).pop();
+                                                        }).catchError((e){
+                                                          _hideSnackBar();
+                                                          _displaySnackBarColor(context,'Error',Colors.red);
+                                                        });
+                                                      }).catchError((e){
+                                                        _hideSnackBar();
+                                                        _displaySnackBarColor(context,'Error',Colors.red);
+                                                      });
+
+
+                                                    }).catchError((e){
+                                                      _hideSnackBar();
+                                                      _displaySnackBarColor(context,'Error',Colors.red);
+                                                    });
+
+                                                  }
+
+                                                  },
+                                                  child: Text("Continue"),
+                                                ),
+                                                FlatButton(
+                                                  onPressed: (){
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Text("Close"),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+                                      );
+                                  }:null,
+                                  child: Text(
+                                      doc['state'] == 'active'?'Stop':'Continue'
+                                  ),
+
+                                )
+                            ),
+                            Container(
+                              //width:Mediasquery.widthTextHour(context),
                               margin: EdgeInsets.all(Mediasquery.k(context)),
                               child:
                               FlatButton(
@@ -244,7 +344,20 @@ class FormHorasState extends State<FormHoras> {
                                 padding: EdgeInsets.all(8.0),
                                 splashColor: Colors.blueAccent,
                                 onPressed: doc['state']=='active'?((){
-                                  FirebaseFirestore.instance.collection("days").doc(user_id).update({'accumulate':diff,'state':'end'});
+                                  _displaySnackBar(context,'Fishing');
+                                  Firestore.instance.collection("days").document(user_id).get().then((s){
+                                    Firestore.instance.collection('days').document(user_id).updateData({'accumulate':s.data['accumulate'] + diff,'state':'end'}).whenComplete((){
+                                      //Scaffold.of(context).hideCurrentSnackBar(reason: SnackBarClosedReason.hide);
+                                      _hideSnackBar();
+                                      _displaySnackBarColor(context,'Fished',Colors.green);
+                                    }).catchError((e){
+                                      _hideSnackBar();
+                                      _displaySnackBarColor(context,'Error',Colors.red);
+                                    });
+                                  }).catchError((e){
+                                    _hideSnackBar();
+                                    _displaySnackBarColor(context,'Error',Colors.red);
+                                  });
                                 }):null,
                                 child: Text(
                                     "Finalizar"
@@ -263,5 +376,33 @@ class FormHorasState extends State<FormHoras> {
         },
       ),
     );
+  }
+  String validationText(String value){
+    if(value.isEmpty)
+    {
+      return 'the field can`t leave empty.';
+    }
+    return null;
+  }
+  _displaySnackBar(BuildContext context,String message) {
+
+      final snackBar = SnackBar(content: Text(message));
+      _scaffoldKey.currentState.showSnackBar(snackBar);
+
+
+  }
+
+  _displaySnackBarColor(BuildContext context,String message,Color color) {
+
+      final snackBar = SnackBar(content: Text(message),backgroundColor: color,);
+      _scaffoldKey.currentState.showSnackBar(snackBar);
+
+
+  }
+
+  _hideSnackBar(){
+
+      _scaffoldKey.currentState.hideCurrentSnackBar(reason: SnackBarClosedReason.hide);
+
   }
 }

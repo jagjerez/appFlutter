@@ -3,16 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:parte_smmsl/Control/AppBarUser.dart';
-import 'package:parte_smmsl/Control/JGItemDaysWork.dart';
-import 'package:parte_smmsl/pages/EditHour.dart';
+
+import 'package:parte_smmsl/Control/AppBarUser2.dart';
+import 'package:parte_smmsl/Control/JGItemEnterprise.dart';
+import 'package:parte_smmsl/pages/EditEnterprise.dart';
 
 
-import '../pages/ListDaysWork.dart';
+import '../pages/listenterprise.dart';
 
-class ListDaysWorkState extends State<ListDaysWork> {
+class listenterprisestate extends State<listenterprise> {
   FirebaseUser user;
-  ListDaysWorkState(this.user);
+  listenterprisestate(this.user);
 
 
 
@@ -26,10 +27,10 @@ class ListDaysWorkState extends State<ListDaysWork> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-        appBar: AppBarUser(height: 50,),
+        appBar: AppBarUser2(height: 50,),
         body:Container(
           child: StreamBuilder<QuerySnapshot>(
-            stream: Firestore.instance.collection('days').snapshots(),
+            stream: Firestore.instance.collection('enterprises').snapshots(),
             builder: (BuildContext context,AsyncSnapshot<QuerySnapshot> snapshot){
               if(snapshot.hasError){
                 return Text('Error ${snapshot.error}');
@@ -41,13 +42,11 @@ class ListDaysWorkState extends State<ListDaysWork> {
                   return  ListView(
                     children: snapshot.data.documents.where((e)=>e['user_id'] == this.user.uid).map((DocumentSnapshot document){
 
-                      return JGItemDaysWork(
+                      return JGItemEnterprise(
                           document['user_id'],
-                          document['enterprise_id'],
-                          document['day'],
-                          document['start'].toDate() ,
-                          document['diff'],
-                          document['state'],
+                          document['name'],
+                          document['address'] ,
+                          document['desc_rela'],
                           document.documentID
                       );
                     }).toList()
@@ -65,7 +64,7 @@ class ListDaysWorkState extends State<ListDaysWork> {
               size: 25.0,
             ),
         onPressed: (){
-          Navigator.of(context).push(MaterialPageRoute(builder: (context)=> EditHour(user_id: user.uid,)));
+          Navigator.of(context).push(MaterialPageRoute(builder: (context)=> EditEnterprise()));
         },
       ),
     );
