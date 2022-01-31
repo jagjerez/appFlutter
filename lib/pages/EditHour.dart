@@ -112,12 +112,12 @@ class _EditHourState extends State<EditHour> {
             .showSnackBar(
             snack
         );
-        FirebaseUser result = await FirebaseAuth.instance.currentUser();
+        User result = await FirebaseAuth.instance.currentUser;
         String day = '${new DateFormat("E").format(DateTime.now())}day';
-        Firestore.instance.collection("days").add({
+        FirebaseFirestore.instance.collection("days").add({
           'day':day,
           'description':_description,
-          'enterprise':_enterprise,
+          'enterprise_id':_enterprise,
           'start':DateTime.now(),
           'state':'active',
           'user_id':result.uid,

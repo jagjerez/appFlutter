@@ -47,7 +47,7 @@ class MyHomePageState extends State<MyHomePage> {
                          Stack(
                            children: <Widget>[
                              Text(
-                               "MASTERTOOLS-DAY",
+                               "MASTERTOOLS-FICHAJES",
                                style: TextStyle(
 
                                    fontWeight: FontWeight.bold,
@@ -59,7 +59,7 @@ class MyHomePageState extends State<MyHomePage> {
                                ),
                              ),
                              Text(
-                               "MASTERTOOLS-DAY",
+                               "MASTERTOOLS-FICHAJES",
                                style: TextStyle(
                                    fontWeight: FontWeight.bold,
                                    fontSize: 25.0,
@@ -167,7 +167,7 @@ class MyHomePageState extends State<MyHomePage> {
             .showSnackBar(
               snack
             );
-        AuthResult result = await FirebaseAuth.instance.signInWithEmailAndPassword(email: _email, password: _password);
+        UserCredential result = await FirebaseAuth.instance.signInWithEmailAndPassword(email: _email, password: _password);
         //snack.action.onPressed();
         Scaffold.of(context).hideCurrentSnackBar(reason: SnackBarClosedReason.hide);
         //Navigator.of(context).push(MaterialPageRoute(builder: (context)=> ListDaysWork(user: result.user,)));

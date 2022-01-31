@@ -152,7 +152,7 @@ class SignUpState extends State<SignUp> {
             .showSnackBar(
             snack
         );
-        AuthResult result = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: _email, password: _password);
+        UserCredential result = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: _email, password: _password);
         //snack.action.onPressed();
         Scaffold.of(context).hideCurrentSnackBar(reason: SnackBarClosedReason.hide);
         Navigator.of(context).pop();

@@ -25,7 +25,7 @@ class FormHorasState extends State<FormHoras> {
     return Scaffold(
       appBar: AppBarUser2(height: 50,),
       body:StreamBuilder<QuerySnapshot>(
-        stream: Firestore.instance.collection('days').snapshots(),
+        stream: FirebaseFirestore.instance.collection('days').snapshots(),
         builder: (context,t){
           if(t.hasError){
             return Text('Error ${t.error}');
@@ -35,7 +35,9 @@ class FormHorasState extends State<FormHoras> {
               return Text('Espere...');
             default:
               return ListView(
-                children: t.data.documents.where((e)=> e.documentID == user_id).map((DocumentSnapshot doc){
+                children: t.data.docs.where((e)=> e.id == user_id).map((QueryDocumentSnapshot document){
+                  final Map<String,dynamic> doc = document.data();
+                  final DocumentReference ref = doc['enterprise_id'];
                   return Column(
                     children: <Widget>[
                       Container(
@@ -56,12 +58,25 @@ class FormHorasState extends State<FormHoras> {
                             ),
                             Container(
                                 width:Mediasquery.widthTextHour(context),
-                                child:Text(
-                                  doc['enterprise'],
-                                  style: TextStyle(
-                                    fontSize: Mediasquery.fontSizeComplementListDaysWork(context),
-                                  ),
-                                  textAlign: TextAlign.left,
+                                child:StreamBuilder<DocumentSnapshot>(
+                                  stream: ref.get().asStream(),
+                                  builder: (BuildContext context,AsyncSnapshot<DocumentSnapshot> snapshot){
+
+                                    if(snapshot.hasError){
+                                      return Text('Error ${snapshot.error}');
+                                    }
+                                    if(snapshot.data != null){
+                                      final Map<String,dynamic> document = snapshot.data.data();
+                                      return Text(
+                                        document['name'],
+                                        style: TextStyle(
+                                          fontSize: Mediasquery.fontSizeComplementListDaysWork(context),
+                                        ),
+                                        textAlign: TextAlign.left,
+                                      );
+                                    }
+                                    return Text('Espere...');
+                                  },
                                 )
                             )
                           ],
@@ -229,7 +244,7 @@ class FormHorasState extends State<FormHoras> {
                                 padding: EdgeInsets.all(8.0),
                                 splashColor: Colors.blueAccent,
                                 onPressed: doc['state']=='active'?((){
-                                  Firestore.instance.collection("days").document(user_id).updateData({'accumulate':diff,'state':'end'});
+                                  FirebaseFirestore.instance.collection("days").doc(user_id).update({'accumulate':diff,'state':'end'});
                                 }):null,
                                 child: Text(
                                     "Finalizar"

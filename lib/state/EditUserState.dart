@@ -96,10 +96,10 @@ class EditUSerState extends State<EditUSer> {
             snack
         );
         if (name){
-          FirebaseUser user = await FirebaseAuth.instance.currentUser();
-          UserUpdateInfo userinfo = new UserUpdateInfo();
-          userinfo.displayName = _old_displayName;
-          await user.updateProfile(userinfo);
+          User user = FirebaseAuth.instance.currentUser;
+          /*UserUpdateInfo userinfo = new UserUpdateInfo();
+          userinfo.displayName = _old_displayName;*/
+          await user.updateDisplayName(_old_displayName);
         }
         //AuthResult result = await FirebaseAuth.instance.signInWithEmailAndPassword(email: _email, password: _password);
         //snack.action.onPressed();

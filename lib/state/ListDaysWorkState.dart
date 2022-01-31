@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,14 +14,13 @@ import 'package:parte_smmsl/pages/EditHour.dart';
 import '../pages/ListDaysWork.dart';
 
 class ListDaysWorkState extends State<ListDaysWork> {
-  FirebaseUser user;
+  User user;
   ListDaysWorkState(this.user);
 
 
 
   @override
   Widget build(BuildContext context) {
-
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -31,7 +31,7 @@ class ListDaysWorkState extends State<ListDaysWork> {
         appBar: AppBarUser(height: 50,),
         body:Container(
           child: StreamBuilder<QuerySnapshot>(
-            stream: Firestore.instance.collection('days').snapshots(),
+            stream: FirebaseFirestore.instance.collection("days").snapshots(),
             builder: (BuildContext context,AsyncSnapshot<QuerySnapshot> snapshot){
               if(snapshot.hasError){
                 return Text('Error ${snapshot.error}');
@@ -41,16 +41,16 @@ class ListDaysWorkState extends State<ListDaysWork> {
                 case ConnectionState.waiting: return Text('Loading...');
                 default:
                   return  ListView(
-                    children: snapshot.data.documents.where((e)=>e['user_id'] == this.user.uid).map((DocumentSnapshot document){
-
+                    children: snapshot.data.docs.where((e)=>e['user_id'] == this.user.uid).map((QueryDocumentSnapshot document){
+                      final Map<String,dynamic> documento = document.data();
                       return JGItemDaysWork(
-                          document['user_id'],
-                          document['enterprise_id'],
-                          document['day'],
-                          document['start'].toDate() ,
-                          document['diff'],
-                          document['state'],
-                          document.documentID
+                          documento['user_id'],
+                          documento['enterprise_id'],
+                          documento['day'],
+                          documento['start'].toDate() ,
+                          documento['diff'],
+                          documento['state'],
+                          document.id
                       );
                     }).toList()
                   );

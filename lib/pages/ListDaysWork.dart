@@ -16,7 +16,7 @@ class ListDaysWork extends StatefulWidget {
   // always marked "final".
 
   final String title;
-  FirebaseUser user;
+  User user;
 
   @override
   ListDaysWorkState createState() => ListDaysWorkState(user);

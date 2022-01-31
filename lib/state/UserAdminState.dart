@@ -13,9 +13,9 @@ class UserAdminState extends State<UserAdmin> {
 
     return Scaffold(
       appBar: AppBarUser2(height: 50,),
-      body: StreamBuilder<FirebaseUser>(
-              stream: FirebaseAuth.instance.currentUser().asStream(),
-              builder: (BuildContext context,AsyncSnapshot<FirebaseUser> user){
+      body: StreamBuilder<User>(
+              stream: new Future<User>.value(FirebaseAuth.instance.currentUser).asStream(),
+              builder: (BuildContext context,AsyncSnapshot<User> user){
                 if(user.hasError){
                   return Text('No login');
                 }
@@ -146,7 +146,7 @@ class UserAdminState extends State<UserAdmin> {
           .showSnackBar(SnackBar(
           content: Text('Sending Email...'),
       ));
-      FirebaseUser user = await FirebaseAuth.instance.currentUser();
+      User user = await FirebaseAuth.instance.currentUser;
       await FirebaseAuth.instance.sendPasswordResetEmail(email: user.email);
       Scaffold.of(context).hideCurrentSnackBar(reason: SnackBarClosedReason.hide);
       Scaffold

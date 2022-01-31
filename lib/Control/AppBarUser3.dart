@@ -20,9 +20,9 @@ class AppBarUser3 extends StatelessWidget implements PreferredSizeWidget{
     var media = MediaQuery.of(context).size;
 
     return AppBar(
-      title: StreamBuilder<FirebaseUser>(
-        stream : FirebaseAuth.instance.currentUser().asStream(),
-        builder: (BuildContext context,AsyncSnapshot<FirebaseUser> user){
+      title: StreamBuilder<User>(
+        stream : FirebaseAuth.instance.authStateChanges(),
+        builder: (BuildContext context,AsyncSnapshot<User> user){
           if(user.hasError){
             return Text('No login');
           }
